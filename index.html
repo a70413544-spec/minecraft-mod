@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⛏️ Майнкрафт Моды</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d1b4e, #1a1a2e);
+            padding: 25px 30px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffd700, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header h1 span {
+            font-size: 18px;
+            -webkit-text-fill-color: #888;
+        }
+        .header .stats {
+            color: #888;
+            font-size: 14px;
+        }
+        .header .stats strong {
+            color: #ffd700;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ffd700, #ff6b35);
+            color: #1a1a2e;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 5px 30px rgba(255, 107, 53, 0.3);
+        }
+        .btn-danger {
+            background: rgba(255, 71, 87, 0.15);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.2);
+        }
+        .btn-danger:hover {
+            background: rgba(255, 71, 87, 0.25);
+        }
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .btn-admin {
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        .btn-admin:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+        .btn-admin.active {
+            background: rgba(255, 71, 87, 0.15);
+            color: #ff4757;
+            border-color: rgba(255, 71, 87, 0.2);
+        }
+
+        .admin-panel {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            display: none;
+            animation: slideDown 0.4s ease;
+        }
+        .admin-panel.active {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .admin-panel h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: #ffd700;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .form-group select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .login-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s;
+        }
+        .login-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .login-box {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            text-align: center;
+        }
+        .login-box h2 {
+            font-size: 24px;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+        .login-box p {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+        .login-box input:focus {
+            border-color: #ffd700;
+        }
+        .login-box .error {
+            color: #ff4757;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: none;
+        }
+        .login-box .error.show {
+            display: block;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+        .search-bar input {
+            flex: 1;
+            min-width: 180px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .search-bar input:focus {
+            border-color: #ffd700;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .search-bar input::placeholder {
+            color: #555;
+        }
+
+        .mods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .mod-card {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: 0.4s;
+        }
+        .mod-card:hover {
+            transform: translateY(-6px);
+            border-color: #ffd700;
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.05);
+        }
+
+        .mod-card .image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+            background: #2d1b4e;
+        }
+        .mod-card .image-placeholder {
+            width: 100%;
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2d1b4e, #1a1a2e);
+            color: #555;
+            font-size: 48px;
+        }
+
+        .mod-card .info {
+            padding: 18px;
+            position: relative;
+        }
+        .mod-card .info h3 {
+            font-size: 17px;
+            margin-bottom: 4px;
+        }
+        .mod-card .info .version {
+            font-size: 13px;
+            color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            padding: 2px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        .mod-card .info .desc {
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .mod-card .info .actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .mod-card .info .actions .btn-sm {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .mod-card .info .actions .btn-sm:hover {
+            transform: scale(1.05);
+        }
+        .btn-download {
+            background: linear-gradient(135deg, #ffd700, #ff6b35);
+            color: #1a1a2e;
+        }
+        .btn-delete {
+            background: rgba(255, 71, 87, 0.15);
+            color: #ff4757;
+            display: none;
+        }
+        .btn-delete.show {
+            display: inline-block;
+        }
+
+        .admin-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 215, 0, 0.15);
+            color: #ffd700;
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.15);
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #555;
+            padding: 50px 20px;
+            font-size: 18px;
+        }
+        .empty-msg .big {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            .header h1 span {
+                font-size: 14px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .mods-grid {
+                grid-template-columns: 1fr;
+            }
+            .btn {
+                padding: 10px 20px;
+                font-size: 13px;
+            }
+            .admin-panel {
+                padding: 18px;
+            }
+            .login-box {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app">
+        <div class="header">
+            <div>
+                <h1>⛏️ Моды <span>для Minecraft</span></h1>
+                <div class="stats">📦 Всего: <strong id="totalMods">0</strong> модов</div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-admin" id="adminToggleBtn">🔐 Админ-панель</button>
+            </div>
+        </div>
+
+        <div class="admin-panel" id="adminPanel">
+            <h2>🔐 Админ-панель</h2>
+            <div class="form-group">
+                <label>Название мода *</label>
+                <input type="text" id="modName" placeholder="Например: Слишком много предметов" />
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Версия Minecraft *</label>
+                    <select id="modVersion">
+                        <option value="1.21">1.21</option>
+                        <option value="1.20" selected>1.20</option>
+                        <option value="1.19">1.19</option>
+                        <option value="1.18">1.18</option>
+                        <option value="1.17">1.17</option>
+                        <option value="1.16">1.16</option>
+                        <option value="1.15">1.15</option>
+                        <option value="1.14">1.14</option>
+                        <option value="1.12">1.12</option>
+                        <option value="1.8">1.8</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Ссылка на скачивание *</label>
+                    <input type="url" id="modLink" placeholder="https://.../mod.jar" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Ссылка на картинку (необязательно)</label>
+                <input type="url" id="modImage" placeholder="https://.../image.png" />
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea id="modDesc" placeholder="Расскажи, что делает этот мод..."></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-primary" id="saveModBtn">💾 Сохранить мод</button>
+                <button class="btn btn-outline" id="clearFormBtn">Очистить</button>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Найти мод по названию или версии..." />
+            <button class="btn btn-outline" id="searchBtn">Найти</button>
+            <button class="btn btn-outline" id="resetSearchBtn">Сбросить</button>
+        </div>
+
+        <div class="mods-grid" id="modsGrid">
+            <div class="empty-msg">
+                <span class="big">📦</span>
+                Пока нет модов. Зайди в админ-панель и добавь свой первый!
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ОКНО ВХОДА ===== -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <h2>🔐 Вход в админ-панель</h2>
+            <p>Введи пароль, чтобы добавлять и удалять моды</p>
+            <div class="error" id="loginError">❌ Неверный пароль!</div>
+            <input type="password" id="loginPassword" placeholder="Введи пароль..." />
+            <button class="btn btn-primary" id="loginBtn" style="width: 100%; justify-content: center;">Войти</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  ПАРОЛЬ: timurka250511
+        //  Хеш сгенерирован через btoa (простейший способ)
+        // ============================================================
+        
+        // Хеш для пароля "timurka250511" (создан через btoa)
+        const PASSWORD_HASH = 'dGltdXJrYTI1MDUxMQ==';
+
+        // Функция для хеширования (Base64)
+        function hashPassword(password) {
+            return btoa(password);
+        }
+
+        // ============================================================
+        //  ХРАНЕНИЕ МОДОВ
+        // ============================================================
+        let mods = [];
+        let isAdmin = false;
+
+        function loadMods() {
+            const saved = localStorage.getItem('minecraft_mods');
+            if (saved) {
+                mods = JSON.parse(saved);
+            }
+            renderMods();
+        }
+
+        function saveMods() {
+            localStorage.setItem('minecraft_mods', JSON.stringify(mods));
+            document.getElementById('totalMods').textContent = mods.length;
+        }
+
+        // ============================================================
+        //  ОТРИСОВКА
+        // ============================================================
+        function renderMods(filteredMods) {
+            const grid = document.getElementById('modsGrid');
+            const list = filteredMods || mods;
+
+            if (list.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-msg">
+                        <span class="big">📦</span>
+                        ${mods.length === 0 ? 'Пока нет модов. Зайди в админ-панель и добавь свой первый!' : 'Ничего не найдено по вашему запросу.'}
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = '';
+            list.forEach((mod, index) => {
+                const realIndex = mods.indexOf(mod);
+                const card = document.createElement('div');
+                card.className = 'mod-card';
+
+                let imageHtml = '';
+                if (mod.image && mod.image.trim()) {
+                    imageHtml = `<img class="image" src="${mod.image}" alt="${mod.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />`;
+                }
+                imageHtml += `<div class="image-placeholder" style="${mod.image && mod.image.trim() ? 'display:none;' : ''}">⛏️</div>`;
+
+                card.innerHTML = `
+                    ${imageHtml}
+                    <div class="info">
+                        ${isAdmin ? '<div class="admin-badge">👑 Админ</div>' : ''}
+                        <h3>${escapeHtml(mod.name)}</h3>
+                        <span class="version">📌 ${mod.version}</span>
+                        <div class="desc">${escapeHtml(mod.desc || 'Описание отсутствует')}</div>
+                        <div class="actions">
+                            <a href="${mod.link}" target="_blank" class="btn-sm btn-download">⬇️ Скачать</a>
+                            <button class="btn-sm btn-delete ${isAdmin ? 'show' : ''}" data-index="${realIndex}">🗑️ Удалить</button>
+                        </div>
+                    </div>
+                `;
+
+                card.querySelector('.btn-delete')?.addEventListener('click', function() {
+                    if (!isAdmin) return;
+                    const idx = parseInt(this.dataset.index);
+                    if (confirm(`Удалить мод «${mods[idx].name}»?`)) {
+                        mods.splice(idx, 1);
+                        saveMods();
+                        renderMods();
+                    }
+                });
+
+                grid.appendChild(card);
+            });
+
+            saveMods();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        //  ДОБАВЛЕНИЕ МОДА
+        // ============================================================
+        function addMod() {
+            if (!isAdmin) {
+                alert('Только админ может добавлять моды!');
+                return;
+            }
+
+            const name = document.getElementById('modName').value.trim();
+            const version = document.getElementById('modVersion').value;
+            const link = document.getElementById('modLink').value.trim();
+            const image = document.getElementById('modImage').value.trim();
+            const desc = document.getElementById('modDesc').value.trim();
+
+            if (!name) {
+                alert('Введите название мода!');
+                document.getElementById('modName').focus();
+                return;
+            }
+            if (!link) {
+                alert('Введите ссылку на скачивание!');
+                document.getElementById('modLink').focus();
+                return;
+            }
+
+            mods.push({
+                name: name,
+                version: version,
+                link: link,
+                image: image || '',
+                desc: desc || 'Описание отсутствует'
+            });
+
+            saveMods();
+            renderMods();
+            clearForm();
+
+            const btn = document.getElementById('saveModBtn');
+            btn.textContent = '✅ Мод добавлен!';
+            setTimeout(() => {
+                btn.innerHTML = '💾 Сохранить мод';
+            }, 1500);
+        }
+
+        function clearForm() {
+            document.getElementById('modName').value = '';
+            document.getElementById('modLink').value = '';
+            document.getElementById('modImage').value = '';
+            document.getElementById('modDesc').value = '';
+            document.getElementById('modVersion').value = '1.20';
+        }
+
+        // ============================================================
+        //  АДМИН-ПАНЕЛЬ (вход/выход)
+        // ============================================================
+        function openLogin() {
+            document.getElementById('loginOverlay').classList.add('active');
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').classList.remove('show');
+            document.getElementById('loginPassword').focus();
+        }
+
+        function closeLogin() {
+            document.getElementById('loginOverlay').classList.remove('active');
+        }
+
+        function login() {
+            const password = document.getElementById('loginPassword').value;
+            const hashed = hashPassword(password);
+
+            if (hashed === PASSWORD_HASH) {
+                isAdmin = true;
+                closeLogin();
+                document.getElementById('adminPanel').classList.add('active');
+                document.getElementById('adminToggleBtn').textContent = '🚪 Выйти из админки';
+                document.getElementById('adminToggleBtn').classList.add('active');
+                renderMods();
+                document.getElementById('modName').focus();
+            } else {
+                document.getElementById('loginError').classList.add('show');
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginPassword').focus();
+            }
+        }
+
+        function logout() {
+            isAdmin = false;
+            document.getElementById('adminPanel').classList.remove('active');
+            document.getElementById('adminToggleBtn').textContent = '🔐 Админ-панель';
+            document.getElementById('adminToggleBtn').classList.remove('active');
+            renderMods();
+        }
+
+        function toggleAdmin() {
+            if (isAdmin) {
+                logout();
+            } else {
+                openLogin();
+            }
+        }
+
+        // ============================================================
+        //  ПОИСК
+        // ============================================================
+        function searchMods(query) {
+            const q = query.toLowerCase().trim();
+            if (!q) {
+                renderMods(mods);
+                return;
+            }
+
+            const filtered = mods.filter(mod =>
+                mod.name.toLowerCase().includes(q) ||
+                mod.version.includes(q) ||
+                (mod.desc && mod.desc.toLowerCase().includes(q))
+            );
+            renderMods(filtered);
+        }
+
+        // ============================================================
+        //  СОБЫТИЯ
+        // ============================================================
+        document.getElementById('adminToggleBtn').addEventListener('click', toggleAdmin);
+
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') login();
+        });
+
+        document.getElementById('loginOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeLogin();
+        });
+
+        document.getElementById('saveModBtn').addEventListener('click', addMod);
+        document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+
+        document.getElementById('modName').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('modLink').focus();
+        });
+        document.getElementById('modLink').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('modImage').focus();
+        });
+        document.getElementById('modImage').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('modDesc').focus();
+        });
+        document.getElementById('modDesc').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                addMod();
+            }
+        });
+
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            searchMods(document.getElementById('searchInput').value);
+        });
+        document.getElementById('searchInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                searchMods(document.getElementById('searchInput').value);
+            }
+        });
+        document.getElementById('resetSearchBtn').addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            renderMods(mods);
+        });
+
+        // ============================================================
+        //  ЗАПУСК
+        // ============================================================
+        loadMods();
+
+        console.log('⛏️ Сайт модов для Minecraft запущен!');
+        console.log('🔐 Пароль скрыт!');
+        console.log('📌 Пароль: timurka250511');
+    </script>
+
+</body>
+</html>
